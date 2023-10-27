@@ -1,61 +1,417 @@
-version: "3"
+version: '3'
 
 services:
   namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
-    container_name: namenode
+    build:
+      context: namenode
     restart: always
     ports:
       - 9870:9870
       - 9000:9000
+    networks:
+      - platform_manager
     volumes:
-      - hadoop_namenode:/hadoop/dfs/name
+      - namenode:/hadoop/dfs/name
     environment:
       - CLUSTER_NAME=test
     env_file:
       - ./hadoop.env
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9870" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode
+  datanode1:
+    build:
+      context: datanode
+    expose:
+      - 9864
+    ports:
+      - 9164:9864
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
     restart: always
-    volumes:
-      - hadoop_datanode:/hadoop/dfs/data
+    networks:
+      - platform_manager
+    env_file:
+      - ./hadoop.env
     environment:
       SERVICE_PRECONDITION: "namenode:9870"
+    healthcheck:
+      test: [ "CMD", "nc", "-zv", "localhost", "9864" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  datanode2:
+    build:
+      context: datanode
+    expose:
+      - 9864
+    ports:
+      - 9264:9864
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+    restart: always
+    networks:
+      - platform_manager
     env_file:
       - ./hadoop.env
-  
-  resourcemanager:
-    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
-    container_name: resourcemanager
-    restart: always
     environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
+      SERVICE_PRECONDITION: "namenode:9870"
+    healthcheck:
+      test: [ "CMD", "nc", "-zv", "localhost", "9864" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  datanode3:
+    build:
+      context: datanode
+    expose:
+      - 9864
+    ports:
+      - 9364:9864
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+    restart: always
+    networks:
+      - platform_manager
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    healthcheck:
+      test: [ "CMD", "nc", "-zv", "localhost", "9864" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  datanode4:
+    build:
+      context: datanode
+    expose:
+      - 9864
+    ports:
+      - 9464:9864
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+    restart: always
+    networks:
+      - platform_manager
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    healthcheck:
+      test: [ "CMD", "nc", "-zv", "localhost", "9864" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  datanode5:
+    build:
+      context: datanode
+    expose:
+      - 9864
+    ports:
+      - 9564:9864
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+    restart: always
+    networks:
+      - platform_manager
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    healthcheck:
+      test: [ "CMD", "nc", "-zv", "localhost", "9864" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  leavesafemode:
+    image: docker-hadoop-historyserver:latest
+    restart: no
+    networks:
+      - platform_manager
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      datanode1:
+        condition: service_healthy
+        restart: true
+      datanode2:
+        condition: service_healthy
+        restart: true
+      datanode3:
+        condition: service_healthy
+        restart: true
+      datanode4:
+        condition: service_healthy
+        restart: true
+      datanode5:
+        condition: service_healthy
+        restart: true
+    command: [ "hdfs", "dfsadmin", "-safemode", "leave"]
+
+  purgecorrupthdfsblocks:
+    image: docker-hadoop-historyserver:latest
+    restart: no
+    networks:
+      - platform_manager
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      datanode1:
+        condition: service_healthy
+        restart: true
+      datanode2:
+        condition: service_healthy
+        restart: true
+      datanode3:
+        condition: service_healthy
+        restart: true
+      datanode4:
+        condition: service_healthy
+        restart: true
+      datanode5:
+        condition: service_healthy
+        restart: true
+      leavesafemode:
+        condition: service_completed_successfully
+        restart: true
+    command: [ "hdfs", "fsck", "/", "-delete"]
+
+  resourcemanager:
+    build:
+      context: resourcemanager
+    restart: always
+    networks:
+      - platform_manager
+    ports:
+      - 8088:8088
+      - 8030:8030
+      - 8031:8031
+      - 8032:8032
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      datanode1:
+        condition: service_healthy
+        restart: true
+      datanode2:
+        condition: service_healthy
+        restart: true
+      datanode3:
+        condition: service_healthy
+        restart: true
+      datanode4:
+        condition: service_healthy
+        restart: true
+      datanode5:
+        condition: service_healthy
+        restart: true
+      leavesafemode:
+        condition: service_completed_successfully
+        restart: true
+      purgecorrupthdfsblocks:
+        condition: service_completed_successfully
+        restart: true
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 datanode4:9864 datanode5:9864"
+    env_file:
+      - ./hadoop.env
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8088" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nodemanager1:
+    build:
+      context: nodemanager
+    restart: always
+    networks:
+      - platform_manager
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      resourcemanager:
+        condition: service_healthy
+        restart: true
+      datanode1:
+        condition: service_healthy
+        restart: true
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode1:9864 resourcemanager:8088"
     env_file:
       - ./hadoop.env
 
-  nodemanager1:
-    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
-    container_name: nodemanager
+  nodemanager2:
+    build:
+      context: nodemanager
     restart: always
+    networks:
+      - platform_manager
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      resourcemanager:
+        condition: service_healthy
+        restart: true
+      datanode2:
+        condition: service_healthy
+        restart: true
     environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode2:9864 resourcemanager:8088"
     env_file:
       - ./hadoop.env
-  
-  historyserver:
-    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
-    container_name: historyserver
+
+  nodemanager3:
+    build:
+      context: nodemanager
     restart: always
+    networks:
+      - platform_manager
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      resourcemanager:
+        condition: service_healthy
+        restart: true
+      datanode3:
+        condition: service_healthy
+        restart: true
     environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode3:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+
+  nodemanager4:
+    build:
+      context: nodemanager
+    restart: always
+    networks:
+      - platform_manager
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      resourcemanager:
+        condition: service_healthy
+        restart: true
+      datanode4:
+        condition: service_healthy
+        restart: true
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode4:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+
+  nodemanager5:
+    build:
+      context: nodemanager
+    restart: always
+    networks:
+      - platform_manager
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      resourcemanager:
+        condition: service_healthy
+        restart: true
+      datanode5:
+        condition: service_healthy
+        restart: true
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode5:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+
+  historyserver:
+    build:
+      context: historyserver
+    ports:
+      - 8188:8188
+    restart: always
+    networks:
+      - platform_manager
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      datanode1:
+        condition: service_healthy
+        restart: true
+      datanode2:
+        condition: service_healthy
+        restart: true
+      datanode3:
+        condition: service_healthy
+        restart: true
+      datanode4:
+        condition: service_healthy
+        restart: true
+      datanode5:
+        condition: service_healthy
+        restart: true
+      resourcemanager:
+        condition: service_healthy
+        restart: true
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 datanode4:9864 datanode5:9864 resourcemanager:8088"
     volumes:
       - hadoop_historyserver:/hadoop/yarn/timeline
     env_file:
       - ./hadoop.env
-  
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8188" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 volumes:
-  hadoop_namenode:
-  hadoop_datanode:
+  datanode:
+  namenode:
   hadoop_historyserver:
+
+networks:
+  platform_manager:
+    name: platform_manager
+    external: true
