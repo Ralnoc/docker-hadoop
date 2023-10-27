@@ -1,4 +1,5 @@
-FROM hadoop-base:3.1.3
+ARG BASE_IMAGE=hadoop-base:3.3.6
+FROM ${BASE_IMAGE}
 
 MAINTAINER James Boylan <jboylan@grubhub.com>
 

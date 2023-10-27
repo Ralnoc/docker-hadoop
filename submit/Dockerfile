@@ -1,7 +1,9 @@
-FROM hadoop-base:3.1.3
+ARG BASE_IMAGE=hadoop-base:3.3.6
+FROM ${BASE_IMAGE}
 
 MAINTAINER James Boylan <jboylan@grubhub.com>
 
+RUN curl -o /tmp/advs.txt https://sherlock-holm.es/stories/plain-text/advs.txt
 COPY WordCount.jar /opt/hadoop/applications/WordCount.jar
 
 ENV JAR_FILEPATH="/opt/hadoop/applications/WordCount.jar"

@@ -2,9 +2,12 @@ version: '3'
 
 services:
   namenode:
+    platform: linux/arm64
     build:
       context: namenode
-    restart: always
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
+    restart: no
     ports:
       - 9870:9870
       - 9000:9000
@@ -24,8 +27,11 @@ services:
       start_period: 40s
 
   datanode1:
+    platform: linux/arm64
     build:
       context: datanode
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     expose:
       - 9864
     ports:
@@ -49,8 +55,11 @@ services:
       start_period: 40s
 
   datanode2:
+    platform: linux/arm64
     build:
       context: datanode
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     expose:
       - 9864
     ports:
@@ -74,8 +83,11 @@ services:
       start_period: 40s
 
   datanode3:
+    platform: linux/arm64
     build:
       context: datanode
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     expose:
       - 9864
     ports:
@@ -99,8 +111,11 @@ services:
       start_period: 40s
 
   datanode4:
+    platform: linux/arm64
     build:
       context: datanode
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     expose:
       - 9864
     ports:
@@ -124,8 +139,11 @@ services:
       start_period: 40s
 
   datanode5:
+    platform: linux/arm64
     build:
       context: datanode
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     expose:
       - 9864
     ports:
@@ -149,7 +167,8 @@ services:
       start_period: 40s
 
   leavesafemode:
-    image: docker-hadoop-historyserver:latest
+    platform: linux/arm64
+    image: hadoop-base:3.1.3-arm64
     restart: no
     networks:
       - platform_manager
@@ -178,42 +197,46 @@ services:
         restart: true
     command: [ "hdfs", "dfsadmin", "-safemode", "leave"]
 
-  purgecorrupthdfsblocks:
-    image: docker-hadoop-historyserver:latest
-    restart: no
-    networks:
-      - platform_manager
-    env_file:
-      - ./hadoop.env
-    environment:
-      SERVICE_PRECONDITION: "namenode:9870"
-    depends_on:
-      namenode:
-        condition: service_healthy
-        restart: true
-      datanode1:
-        condition: service_healthy
-        restart: true
-      datanode2:
-        condition: service_healthy
-        restart: true
-      datanode3:
-        condition: service_healthy
-        restart: true
-      datanode4:
-        condition: service_healthy
-        restart: true
-      datanode5:
-        condition: service_healthy
-        restart: true
-      leavesafemode:
-        condition: service_completed_successfully
-        restart: true
-    command: [ "hdfs", "fsck", "/", "-delete"]
+#  purgecorrupthdfsblocks:
+#    platform: linux/arm64
+#    image: hadoop-base:3.1.3-arm64
+#    restart: no
+#    networks:
+#      - platform_manager
+#    env_file:
+#      - ./hadoop.env
+#    environment:
+#      SERVICE_PRECONDITION: "namenode:9870"
+#    depends_on:
+#      namenode:
+#        condition: service_healthy
+#        restart: true
+#      datanode1:
+#        condition: service_healthy
+#        restart: true
+#      datanode2:
+#        condition: service_healthy
+#        restart: true
+#      datanode3:
+#        condition: service_healthy
+#        restart: true
+#      datanode4:
+#        condition: service_healthy
+#        restart: true
+#      datanode5:
+#        condition: service_healthy
+#        restart: true
+#      leavesafemode:
+#        condition: service_completed_successfully
+#        restart: true
+#    command: [ "hdfs", "fsck", "/", "-delete"]
 
   resourcemanager:
+    platform: linux/arm64
     build:
       context: resourcemanager
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     restart: always
     networks:
       - platform_manager
@@ -244,9 +267,9 @@ services:
       leavesafemode:
         condition: service_completed_successfully
         restart: true
-      purgecorrupthdfsblocks:
-        condition: service_completed_successfully
-        restart: true
+#      purgecorrupthdfsblocks:
+#        condition: service_completed_successfully
+#        restart: true
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 datanode4:9864 datanode5:9864"
     env_file:
@@ -259,8 +282,11 @@ services:
       start_period: 40s
 
   nodemanager1:
+    platform: linux/arm64
     build:
       context: nodemanager
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     restart: always
     networks:
       - platform_manager
@@ -280,8 +306,11 @@ services:
       - ./hadoop.env
 
   nodemanager2:
+    platform: linux/arm64
     build:
       context: nodemanager
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     restart: always
     networks:
       - platform_manager
@@ -301,8 +330,11 @@ services:
       - ./hadoop.env
 
   nodemanager3:
+    platform: linux/arm64
     build:
       context: nodemanager
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     restart: always
     networks:
       - platform_manager
@@ -322,8 +354,11 @@ services:
       - ./hadoop.env
 
   nodemanager4:
+    platform: linux/arm64
     build:
       context: nodemanager
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     restart: always
     networks:
       - platform_manager
@@ -343,8 +378,11 @@ services:
       - ./hadoop.env
 
   nodemanager5:
+    platform: linux/arm64
     build:
       context: nodemanager
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     restart: always
     networks:
       - platform_manager
@@ -364,11 +402,14 @@ services:
       - ./hadoop.env
 
   historyserver:
+    platform: linux/arm64
     build:
       context: historyserver
+      args:
+        BASE_IMAGE: hadoop-base:3.1.3-arm64
     ports:
       - 8188:8188
-    restart: always
+    restart: no
     networks:
       - platform_manager
     depends_on:
@@ -413,5 +454,3 @@ volumes:
 
 networks:
   platform_manager:
-    name: platform_manager
-    external: true
