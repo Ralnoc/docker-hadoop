@@ -1,4 +1,4 @@
-version: '3'
+version: '3.2'
 
 services:
   namenode:
@@ -12,7 +12,7 @@ services:
       - 9870:9870
       - 9000:9000
     networks:
-      - platform_manager
+      - platform-manager
     volumes:
       - namenode:/hadoop/dfs/name
     environment:
@@ -42,7 +42,7 @@ services:
         restart: true
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     env_file:
       - ./hadoop.env
     environment:
@@ -70,7 +70,7 @@ services:
         restart: true
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     env_file:
       - ./hadoop.env
     environment:
@@ -98,7 +98,7 @@ services:
         restart: true
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     env_file:
       - ./hadoop.env
     environment:
@@ -126,7 +126,7 @@ services:
         restart: true
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     env_file:
       - ./hadoop.env
     environment:
@@ -154,7 +154,7 @@ services:
         restart: true
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     env_file:
       - ./hadoop.env
     environment:
@@ -171,7 +171,7 @@ services:
     image: hadoop-base:3.3.3-amd64
     restart: no
     networks:
-      - platform_manager
+      - platform-manager
     env_file:
       - ./hadoop.env
     environment:
@@ -205,7 +205,7 @@ services:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     ports:
       - 8088:8088
       - 8030:8030
@@ -252,7 +252,7 @@ services:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     depends_on:
       namenode:
         condition: service_healthy
@@ -276,7 +276,7 @@ services:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     depends_on:
       namenode:
         condition: service_healthy
@@ -300,7 +300,7 @@ services:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     depends_on:
       namenode:
         condition: service_healthy
@@ -324,7 +324,7 @@ services:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     depends_on:
       namenode:
         condition: service_healthy
@@ -348,7 +348,7 @@ services:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     restart: always
     networks:
-      - platform_manager
+      - platform-manager
     depends_on:
       namenode:
         condition: service_healthy
@@ -374,7 +374,7 @@ services:
       - 8188:8188
     restart: no
     networks:
-      - platform_manager
+      - platform-manager
     depends_on:
       namenode:
         condition: service_healthy
@@ -421,7 +421,7 @@ services:
     env_file:
       - ./hadoop.env
     networks:
-      - platform_manager
+      - platform-manager
     depends_on:
       namenode:
         condition: service_healthy
@@ -430,7 +430,6 @@ services:
         condition: service_healthy
         restart: true
     environment:
-      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:mysql://hive-metastore/metastore"
       SERVICE_PRECONDITION: "hive-metastore:9083 namenode:9000"
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "10000" ]
@@ -450,7 +449,7 @@ services:
     env_file:
       - ./hadoop.env
     networks:
-      - platform_manager
+      - platform-manager
     command: /opt/hive/bin/hive --service metastore
     depends_on:
       namenode:
@@ -476,7 +475,8 @@ services:
         restart: true
     environment:
       HIVE_VERSION: ${HIVE_VERSION}
-      SERVICE_PRECONDITION: "namenode:9000 datanode1:9864 datanode2:9864 datanode3:9864 datanode4:9864 datanode5:9864 hive-metastore-postgresql:5432"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:mysql://hive-metastore/metastore"
+      SERVICE_PRECONDITION: "namenode:9000 datanode1:9864 datanode2:9864 datanode3:9864 datanode4:9864 datanode5:9864 hive-metastore-mysql:3306"
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "9083" ]
       interval: 30s
@@ -496,9 +496,9 @@ services:
         METASTORE_DB_USER: ${METASTORE_DB_USER}
         METASTORE_DB_PASSWORD: ${METASTORE_DB_PASSWORD}
     networks:
-      - platform_manager
+      - platform-manager
     healthcheck:
-      test: [ "CMD", "nc", "-z", "localhost", "3306" ]
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -510,4 +510,5 @@ volumes:
   hadoop_historyserver:
 
 networks:
-  platform_manager:
+  platform-manager:
+    name: platform-manager-network

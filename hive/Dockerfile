@@ -47,4 +47,4 @@ RUN chmod +x /run.sh
 EXPOSE 10000
 EXPOSE 10002
 
-CMD ["run.sh"]
+CMD ["/run.sh"]
