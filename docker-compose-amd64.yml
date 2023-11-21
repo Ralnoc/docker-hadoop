@@ -413,7 +413,7 @@ services:
   hive-server:
     platform: linux/amd64
     build:
-      context: hive
+      context: hive/server
       args:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     ports:
@@ -441,7 +441,7 @@ services:
   hive-metastore:
     platform: linux/amd64
     build:
-      context: hive
+      context: hive/database
       args:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     ports:
@@ -499,6 +499,35 @@ services:
       - platform-manager
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  spark-master:
+    platform: linux/amd64
+    build:
+      context: spark/database
+      args:
+        BASE_IMAGE: hadoop-base:3.3.3-amd64
+    ports:
+      - "9083:9083"
+    env_file:
+      - ./hadoop.env
+    networks:
+      - platform-manager
+    command: /opt/hive/bin/hive --service metastore
+    depends_on:
+      namenode:
+        condition: service_healthy
+        restart: true
+      hive-server:
+        condition: service_healthy
+        restart: true
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 hive-server:10000"
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "8080" ]
       interval: 30s
       timeout: 10s
       retries: 3
