@@ -441,7 +441,7 @@ services:
   hive-metastore:
     platform: linux/amd64
     build:
-      context: hive/database
+      context: hive/server
       args:
         BASE_IMAGE: hadoop-base:3.3.3-amd64
     ports:
@@ -487,7 +487,7 @@ services:
   hive-metastore-mysql:
     platform: linux/amd64
     build:
-      context: hivemysql
+      context: hive/database
       args:
         BASE_IMAGE: mysql:latest
         HIVE_VERSION: ${HIVE_VERSION}
@@ -495,6 +495,8 @@ services:
         METASTORE_DB_NAME: ${METASTORE_DB_NAME}
         METASTORE_DB_USER: ${METASTORE_DB_USER}
         METASTORE_DB_PASSWORD: ${METASTORE_DB_PASSWORD}
+    ports:
+      - "3307:3306"
     networks:
       - platform-manager
     healthcheck:
@@ -504,34 +506,34 @@ services:
       retries: 3
       start_period: 40s
 
-  spark-master:
-    platform: linux/amd64
-    build:
-      context: spark/database
-      args:
-        BASE_IMAGE: hadoop-base:3.3.3-amd64
-    ports:
-      - "9083:9083"
-    env_file:
-      - ./hadoop.env
-    networks:
-      - platform-manager
-    command: /opt/hive/bin/hive --service metastore
-    depends_on:
-      namenode:
-        condition: service_healthy
-        restart: true
-      hive-server:
-        condition: service_healthy
-        restart: true
-    environment:
-      SERVICE_PRECONDITION: "namenode:9000 hive-server:10000"
-    healthcheck:
-      test: [ "CMD", "nc", "-z", "localhost", "8080" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+#  spark-master:
+#    platform: linux/amd64
+#    build:
+#      context: spark/database
+#      args:
+#        BASE_IMAGE: hadoop-base:3.3.3-amd64
+#    ports:
+#      - "9083:9083"
+#    env_file:
+#      - ./hadoop.env
+#    networks:
+#      - platform-manager
+#    command: /opt/hive/bin/hive --service metastore
+#    depends_on:
+#      namenode:
+#        condition: service_healthy
+#        restart: true
+#      hive-server:
+#        condition: service_healthy
+#        restart: true
+#    environment:
+#      SERVICE_PRECONDITION: "namenode:9000 hive-server:10000"
+#    healthcheck:
+#      test: [ "CMD", "nc", "-z", "localhost", "8080" ]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 40s
 
 volumes:
   datanode:
